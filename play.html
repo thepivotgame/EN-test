@@ -959,7 +959,7 @@
                             <path d="M9 2 L9 16 M3 11 L9 18 L15 11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <a href="index.html"  style="background:#f9d976;color:#0d3349;border:none;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:bold;letter-spacing:1px;cursor:pointer;min-height:42px;font-family:Georgia,serif;touch-action:manipulation;text-decoration:none;display:inline-flex;align-items:center;">Instructions</a>
+                    <a href="index.html?howto=1"  style="background:#f9d976;color:#0d3349;border:none;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:bold;letter-spacing:1px;cursor:pointer;min-height:42px;font-family:Georgia,serif;touch-action:manipulation;text-decoration:none;display:inline-flex;align-items:center;">Instructions</a>
                 </div>
             </div>
         </div>
@@ -1004,7 +1004,7 @@
         </div>
         <p class="hidden" id="view-share-link" style="text-align:center;font-family:-apple-system,sans-serif;font-size:13px;color:#f9d976;font-weight:bold;text-decoration:underline;cursor:pointer;touch-action:manipulation;margin:6px 0;">click here to view sharing window</p>
         <div id="stats-panel"></div>
-        <a href="https://www.biblepivot.com" target="_blank" rel="noopener" id="biblepivot-link" style="display:block;text-align:center;font-family:-apple-system,sans-serif;font-size:13px;color:#f9d976;font-weight:bold;text-decoration:underline;cursor:pointer;touch-action:manipulation;margin:6px 0;">click here to play our other game: Bible Pivot</a>
+                <a href="https://www.biblepivot.com" target="_blank" rel="noopener" id="biblepivot-link" class="hidden" style="display:block;text-align:center;font-family:-apple-system,sans-serif;font-size:13px;color:#f9d976;font-weight:bold;text-decoration:underline;cursor:pointer;touch-action:manipulation;margin:6px 0;">click here to play our other game: Bible Pivot</a>
     </div>
 
     <p class="footer">PIVOT · DAILY PUZZLE</p>
@@ -1275,6 +1275,8 @@
         }
         panel.innerHTML = html;
         panel.style.display = 'block';
+        const bpLink = document.getElementById('biblepivot-link');
+        if (bpLink) bpLink.classList.remove('hidden');
     }
     function statsMonthEndShareLine(dateStr) {
         const s = statsSummary(dateStr);
@@ -2664,7 +2666,9 @@
         const hints = totalHintsUsed();
         const p2Guesses = p2EventLog.filter(e => e.type === 'guess').length;
         let performanceLine = '';
-        if (hints === 0) {
+        if (lastGameWon === false) {
+            performanceLine = "Didn't quite get it today. \n😔";
+        } else if (hints === 0) {
             performanceLine = 'No hints used. \n🎉 🥳 😎 👌';
         } else if (hints === 1) {
             performanceLine = 'Only 1 hint used. \n🥳 🤓';
