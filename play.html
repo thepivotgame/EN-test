@@ -2270,6 +2270,23 @@
         }
     }
 
+    function scrollToPageBottom() {
+        // Wait two animation frames so any just-changed layout (cards being
+        // unhidden, stats panel being filled in) has actually been measured
+        // by the browser before we read scrollHeight — otherwise this can
+        // measure a too-short page and land partway down instead of at the
+        // true bottom.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const bottom = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight
+                );
+                window.scrollTo({ top: bottom, behavior: 'smooth' });
+            });
+        });
+    }
+
     function showWin() {
         clearProgress();
         saveTodayResult(true);
@@ -2300,11 +2317,8 @@
         document.getElementById('winscore').textContent = scoreMsg;
         
         setTimeout(() => {
-            document.getElementById('wincard').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-            setTimeout(() => launchFireworks(3500), 600);
+            scrollToPageBottom();
+            setTimeout(() => { scrollToPageBottom(); launchFireworks(3500); }, 600);
         }, 300);
     }
     function showLoss() {
@@ -2323,11 +2337,8 @@
         renderStatsPanel(todayISO());
         document.getElementById('losstext').textContent = P.lossText + (hints > 0 ? ' (' + hints + (hints === 1 ? ' hint' : ' hints') + ' used)' : '');
         setTimeout(() => {
-            document.getElementById('losscard').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-            setTimeout(() => launchRain(3500), 600);
+            scrollToPageBottom();
+            setTimeout(() => { scrollToPageBottom(); launchRain(3500); }, 600);
         }, 300);
     }
 
@@ -2877,7 +2888,15 @@
         pastGuesses = saved.pastGuesses || [];
         p1EventLog = saved.p1EventLog || [];
         p2EventLog = saved.p2EventLog || [];
+        advancedMode = saved.advancedMode || false;
         gameOver = true;
+        // A completed/redisplayed game is obviously past the stage-2 unlock
+        // already. Without this, the window 'scroll' listener further down
+        // sees s2Initialised still at its default false and — as soon as our
+        // scroll-to-bottom logic fires a scroll event — calls goStage2()
+        // again, which resets the instrcard content and scrolls the page
+        // back up to it, undoing the scroll-to-bottom entirely.
+        s2Initialised = true;
 
         // Restore Part 1's board exactly as it was found, if we have it saved
         // (older saved results from before this existed won't have it).
