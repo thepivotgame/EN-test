@@ -2068,22 +2068,38 @@
     }
 
     function computeUntouchedLetterBonus() {
-        // Counts how many letters in the final part-2 pool were never used
-        // in any submitted guess (the winning guess counts too, since it's
-        // one of pastGuesses by the time this runs).
-        // Tallied by letter character rather than pool tile id, since the
-        // pool is rebuilt (fresh ids) each time a Part 1 word is found while
-        // jumpedEarly is active — tile ids aren't stable across the whole
-        // game, but letter-character counts are a good, simple proxy.
-        const usedCount = {};
-        pastGuesses.forEach(g => {
-            g.letters.forEach(l => { usedCount[l] = (usedCount[l] || 0) + 1; });
-        });
-        const poolCount = {};
-        pool.forEach(s => { poolCount[s.l] = (poolCount[s.l] || 0) + 1; });
+        // Counts pool tiles that are neither confirmed-correct (green) nor
+        // confirmed-absent-from-the-target (muted) — i.e. tiles that gave
+        // the player no information at all: either their letter was never
+        // guessed, or they're an "extra" copy beyond what's been confirmed
+        // for a letter that IS in the target (e.g. a target has one O, the
+        // player found it, but a second O tile sits in the pool untouched).
+        //
+        // This reuses letterColorPlan() — the same classification renderPool()
+        // already uses to color tiles green/absent/neutral — so the bonus
+        // always matches what the player can see in the pool, rather than a
+        // separate heuristic that could disagree with the on-screen colors.
+        const plan = letterColorPlan();
+        const consumed = {}; // letter -> { green, yellow } tiles already accounted for, mirrors renderPool()
         let untouched = 0;
-        Object.entries(poolCount).forEach(([l, cnt]) => {
-            untouched += Math.max(0, cnt - (usedCount[l] || 0));
+        pool.forEach(slot => {
+            const lp = plan[slot.l];
+            if (!lp) {
+                untouched++; // letter never appeared in any guess at all
+                return;
+            }
+            if (lp.fullyAbsent)
+                return; // confirmed NOT in the target — touched, just not present
+            if (!consumed[slot.l])
+                consumed[slot.l] = { green: 0, yellow: 0 };
+            const c = consumed[slot.l];
+            if (c.green < lp.green) {
+                c.green++; // one of the confirmed-correct copies
+            } else if (c.yellow < lp.yellow) {
+                c.yellow++; // one of the confirmed-present copies
+            } else {
+                untouched++; // extra copy beyond what's been confirmed
+            }
         });
         return untouched;
     }
