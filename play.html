@@ -267,7 +267,57 @@
         font-size: 16px;
         font-weight: bold;
         text-align: center;
-    }/* Grid */
+    }
+
+    /* ── Floating score tracker ─────────────────────────────────────────── */
+    #score-tracker {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 950;
+        background: rgba(33, 47, 61, 0.92);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 10px;
+        padding: 7px 14px;
+        font-family: Georgia, serif;
+        font-size: 15px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        display: none;
+        pointer-events: none;
+    }
+
+    #score-tracker .score-label {
+        font-size: 9px;
+        letter-spacing: 2px;
+        color: #a8c8e8;
+        text-transform: uppercase;
+        display: block;
+        font-weight: normal;
+        margin-bottom: 1px;
+    }
+
+    .score-pop {
+        position: fixed;
+        top: 44px;
+        right: 18px;
+        z-index: 949;
+        color: #2ecc71;
+        font-family: Georgia, serif;
+        font-size: 17px;
+        font-weight: bold;
+        pointer-events: none;
+        animation: scorePopFloat 1100ms ease-out forwards;
+    }
+
+    @keyframes scorePopFloat {
+        0% { opacity: 0; transform: translateY(0); }
+        15% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-32px); }
+    }
+    /* Grid */
 
     #grid {
         display: grid;
@@ -954,6 +1004,7 @@
         Loading today's puzzle…
     </div>
     <div id="flash"></div>
+    <div id="score-tracker"><span class="score-label">Score</span><span id="score-value">0</span></div>
 
     <div id="s1" style="display:none">
         <div class="card">
@@ -1516,6 +1567,7 @@
         foundKeys = new Set(),
         pivotCellKeys = new Set();
     let foundOrder = []; // tracks Part 1 words in the order they were found
+    let totalScore = 0; // running score total, persists for the whole game (see addScore())
     let lastGameWon = null; // tracks whether the most recent game finish was a win, for reopening the summary popup
     let p1EventLog = [], // chronological log of Part 1 word-found / hint-used events, for score report line breaks
         p2EventLog = []; // chronological log of Part 2 guess-submitted / hint-used events, same purpose
@@ -1557,6 +1609,28 @@
             return;
         gameStarted = true;
         document.body.classList.add('playing');
+        showScoreTracker();
+    }
+    function showScoreTracker() {
+        const el = document.getElementById('score-tracker');
+        if (el) el.style.display = 'block';
+    }
+    function renderScoreTracker() {
+        const el = document.getElementById('score-value');
+        if (el) el.textContent = totalScore;
+    }
+    function addScore(points, label) {
+        totalScore += points;
+        renderScoreTracker();
+        spawnScorePop(points);
+        saveProgress(); // persist immediately so a mid-game refresh never loses earned points
+    }
+    function spawnScorePop(points) {
+        const pop = document.createElement('div');
+        pop.className = 'score-pop';
+        pop.textContent = (points >= 0 ? '+' : '') + points;
+        document.body.appendChild(pop);
+        setTimeout(() => pop.remove(), 1150);
     }
     function totalHintsUsed() {
         return p1EventLog.filter(e => e.type === 'hint').length + p2EventLog.filter(e => e.type === 'hint').length;
@@ -1742,6 +1816,7 @@
             p1HintLocked = false;
             foundOrder.push(w); // record order found for share report
             p1EventLog.push({ type: 'word', pivot: w === P.pivot });
+            addScore(5, 'Word found!');
             p.cells.forEach(([rr, cc]) => foundKeys.add(ck(rr, cc)));
             if (w === P.pivot) {
                 p.cells.forEach(([rr, cc]) => pivotCellKeys.add(ck(rr, cc)));
@@ -2156,7 +2231,8 @@
                 foundWords: Array.from(foundWords),
                 foundOrder: foundOrder,
                 p1EventLog: p1EventLog,
-                p2EventLog: p2EventLog
+                p2EventLog: p2EventLog,
+                totalScore: totalScore
             }));
         } catch (e) {
             // storage unavailable — nothing to do
@@ -2188,7 +2264,8 @@
                 usedLat: usedLat,
                 usedPiv: usedPiv,
                 p2HintLocked: p2HintLocked,
-                advancedMode: advancedMode
+                advancedMode: advancedMode,
+                totalScore: totalScore
             }));
         } catch (e) { /* storage unavailable */ }
     }
@@ -2219,6 +2296,7 @@
         usedPiv = saved.usedPiv || false;
         p2HintLocked = saved.p2HintLocked || false;
         advancedMode = saved.advancedMode || false;
+        totalScore = saved.totalScore || 0;
 
         // Restore pool
         pool.length = 0;
@@ -2252,6 +2330,7 @@
 
         // Restore UI
         if (gameStarted) document.body.classList.add('playing');
+        if (gameStarted) { showScoreTracker(); renderScoreTracker(); }
 
         const s1 = document.getElementById('s1');
         const s2 = document.getElementById('s2');
@@ -2930,6 +3009,9 @@
             foundWords = new Set(saved.foundWords || []);
             foundOrder = saved.foundOrder || [];
             selCells = [];
+            totalScore = saved.totalScore || 0;
+            showScoreTracker();
+            renderScoreTracker();
 
             const s1 = document.getElementById('s1');
             if (s1) s1.style.display = '';
