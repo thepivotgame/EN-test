@@ -2092,8 +2092,11 @@
             let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
             if (jumpedEarly && !wordSearchDone)
                 txt += "<br>Reduce the letter pool by finding more words above.";
-            txt += "<br><br>Score 25 points if you find the Target in 1 guess, 20 pts in 2 guesses, etc.";
-            txt += "<br><br>Choose carefully — score a 1 point bonus for each letter that remains untouched in the letter pool below.";
+            txt += "<br><br>Score 25 points if you find today's word in 1 guess.";
+            txt += "<br>Score 20 points if you find today's word in 2 guesses.";
+            txt += "<br>Score 15 points if you find today's word in 3 guesses.";
+            txt += "<br>Score 10 points if you find today's word in 4 guesses.";
+            txt += "<br><br>BONUS: score 1 bonus point for each letter that remains untouched in the pool below.";
             instrEl.innerHTML = txt;
         }
         refreshPool();
@@ -2502,8 +2505,11 @@
                 let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
                 if (jumpedEarly && !wordSearchDone)
                     txt += "<br>Reduce the letter pool by finding more words above.";
-                txt += "<br><br>Score 25 points if you find the Target in 1 guess, 20 pts in 2 guesses, etc.";
-                txt += "<br><br>Choose carefully — score a 1 point bonus for each letter that remains untouched in the letter pool below.";
+                txt += "<br><br>Score 25 points if you find today's word in 1 guess.";
+                txt += "<br>Score 20 points if you find today's word in 2 guesses.";
+                txt += "<br>Score 15 points if you find today's word in 3 guesses.";
+                txt += "<br>Score 10 points if you find today's word in 4 guesses.";
+                txt += "<br><br>BONUS: score 1 bonus point for each letter that remains untouched in the pool below.";
                 instrEl.innerHTML = txt;
             }
             renderPool();
