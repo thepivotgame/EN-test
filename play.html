@@ -310,17 +310,16 @@
         z-index: 960;
         color: #fff700;
         font-family: Georgia, serif;
-        font-size: 20px;
+        font-size: 40px;
         font-weight: bold;
-        text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+        text-shadow: 0 2px 10px rgba(0,0,0,0.7), 0 0 22px rgba(255,247,0,0.55);
         pointer-events: none;
-        animation: scorePopFloat 1300ms ease-out forwards;
-    }
-
-    @keyframes scorePopFloat {
-        0% { opacity: 0; transform: translateY(0) scale(0.9); }
-        15% { opacity: 1; transform: translateY(0) scale(1.05); }
-        100% { opacity: 0; transform: translateY(-42px) scale(1); }
+        transform: translate(-50%, -50%);
+        opacity: 1;
+        transition: top 850ms cubic-bezier(.25,.65,.3,1),
+                    left 850ms cubic-bezier(.25,.65,.3,1),
+                    font-size 850ms ease-in,
+                    opacity 850ms ease-in;
     }
     /* Grid */
 
@@ -1635,16 +1634,33 @@
         const pop = document.createElement('div');
         pop.className = 'score-pop';
         pop.textContent = (points >= 0 ? '+' : '') + points;
+
+        // Start big, dead center of the screen.
+        const startTop = window.innerHeight / 2;
+        const startLeft = window.innerWidth / 2;
+        pop.style.top = startTop + 'px';
+        pop.style.left = startLeft + 'px';
+        document.body.appendChild(pop);
+
+        // Force layout so the browser registers the start position before
+        // we change it — otherwise the transition has nothing to animate from.
+        void pop.offsetWidth;
+
+        // Target: the badge's actual current position (so it always lands
+        // exactly on the score counter, regardless of screen size/scroll).
+        let targetTop = startTop - 80, targetLeft = startLeft;
         if (tracker) {
             const rect = tracker.getBoundingClientRect();
-            pop.style.top = (rect.bottom + 8) + 'px';
-            pop.style.right = (window.innerWidth - rect.right) + 'px';
-        } else {
-            pop.style.top = '60px';
-            pop.style.right = '18px';
+            targetTop = rect.top + rect.height / 2;
+            targetLeft = rect.left + rect.width / 2;
         }
-        document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 1350);
+        requestAnimationFrame(() => {
+            pop.style.top = targetTop + 'px';
+            pop.style.left = targetLeft + 'px';
+            pop.style.fontSize = '14px';
+            pop.style.opacity = '0';
+        });
+        setTimeout(() => pop.remove(), 900);
     }
     function totalHintsUsed() {
         return p1EventLog.filter(e => e.type === 'hint').length + p2EventLog.filter(e => e.type === 'hint').length;
