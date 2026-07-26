@@ -2092,11 +2092,11 @@
             let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
             if (jumpedEarly && !wordSearchDone)
                 txt += "<br>Reduce the letter pool by finding more words above.";
-            txt += "<br><br>Score 25 points if you find today's word in 1 guess.";
-            txt += "<br>Score 20 points if you find today's word in 2 guesses.";
-            txt += "<br>Score 15 points if you find today's word in 3 guesses.";
-            txt += "<br>Score 10 points if you find today's word in 4 guesses.";
-            txt += "<br><br>BONUS: score 1 bonus point for each letter that remains untouched in the pool below.";
+            txt += "<br><br>+25 if you solve in 1 guess.";
+            txt += "<br>+20 if you solve in 2 guesses.";
+            txt += "<br>+15 if you solve in 3 guesses.";
+            txt += "<br>+10 if you solve in 4 guesses.";
+            txt += "<br><br>BONUS: +1 for each untouched letter.";
             instrEl.innerHTML = txt;
         }
         refreshPool();
@@ -2505,11 +2505,11 @@
                 let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
                 if (jumpedEarly && !wordSearchDone)
                     txt += "<br>Reduce the letter pool by finding more words above.";
-                txt += "<br><br>Score 25 points if you find today's word in 1 guess.";
-                txt += "<br>Score 20 points if you find today's word in 2 guesses.";
-                txt += "<br>Score 15 points if you find today's word in 3 guesses.";
-                txt += "<br>Score 10 points if you find today's word in 4 guesses.";
-                txt += "<br><br>BONUS: score 1 bonus point for each letter that remains untouched in the pool below.";
+                txt += "<br><br>+25 if you solve in 1 guess.";
+                txt += "<br>+20 if you solve in 2 guesses.";
+                txt += "<br>+15 if you solve in 3 guesses.";
+                txt += "<br>+10 if you solve in 4 guesses.";
+                txt += "<br><br>BONUS: +1 for each untouched letter.";
                 instrEl.innerHTML = txt;
             }
             renderPool();
