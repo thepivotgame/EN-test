@@ -782,6 +782,21 @@
         margin-bottom: 18px;
     }
 
+    #modal-lock-question {
+        display: block;
+        color: #f9d976;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    #modal-choice-body .modal-detail-line {
+        display: block;
+        font-size: 13px;
+        color: #a8c8e8;
+        line-height: 1.5;
+    }
+
     .modal-btn {
         display: block;
         width: 100%;
@@ -1147,9 +1162,12 @@
     <div id="modal-overlay">
         <div id="modal-box">
             <h3 id="modal-title">🪸 PIVOT word found!</h3>
-            <p id="modal-body">This word is your clue to Part 2.</p>
             <!-- Choice version: shown when more than 2 search words remain unfound. -->
-            <p class="modal-body" id="modal-choice-body">Lock the word search now and move on, or keep searching for the rest?</p>
+            <p class="modal-body" id="modal-choice-body">
+                <span id="modal-lock-question">Lock in +0 point bonus?</span>
+                <span class="modal-detail-line">Score 5 points for each unfound word</span>
+                <span class="modal-detail-line">Lock the word search and go to Part 2</span>
+            </p>
             <button class="modal-btn primary" id="modal-jump">→ Advanced: Lock &amp; go to Part 2</button>
             <button class="modal-btn secondary" id="modal-stay">Classic: Keep searching</button>
             <!-- No-choice version: shown when 2 or fewer search words remain unfound (auto-locks, same as before). -->
@@ -1983,11 +2001,8 @@
         // search words remain unfound.
         const unfoundCount = P.words.length - foundWords.size;
         pendingLockBonus = unfoundCount * 5;
-        const bodyEl = document.getElementById('modal-choice-body');
-        bodyEl.innerHTML = 'Lock the word search now for a bonus of <strong>+' + pendingLockBonus +
-            '</strong> (5 pts × ' + unfoundCount + ' unfound word' + (unfoundCount === 1 ? '' : 's') +
-            '), or keep searching for the rest?';
-        bodyEl.style.display = '';
+        document.getElementById('modal-lock-question').textContent = 'Lock in +' + pendingLockBonus + ' point bonus?';
+        document.getElementById('modal-choice-body').style.display = '';
         document.getElementById('modal-stay').style.display = '';
         document.getElementById('modal-lock-body').style.display = 'none';
         document.getElementById('modal-overlay').style.display = 'flex';
