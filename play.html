@@ -1612,6 +1612,12 @@
         p2HintLocked = false; // true once a hint's been used since the last guess — blocks another until you guess again
     let gameStarted = false;
     const MAX_GUESSES = 4;
+    // Score-pop animation timing — must match the .score-pop transition
+    // duration in the CSS. Kept as constants so the flight time, the badge
+    // update delay, the bonus pop's stagger, and the part-2 transition delay
+    // can never silently drift out of sync with each other.
+    const POP_FLIGHT_MS = 1600;
+    const BONUS_START_DELAY_MS = 1750; // gap before the bonus pop starts, so it never overlaps the regular +5 pop's own flight
 
     // ── HELPERS ───────────────────────────────────────────────────────────────────
     function ck(r, c) {
@@ -1656,12 +1662,12 @@
     function addBonusScore(points) {
         // Delayed so it doesn't visually collide with the regular "+5" pop
         // that likely just fired for the 7th word a moment earlier — starts
-        // once that pop has already landed (matches its 1600ms flight time).
+        // once that pop has already landed (matches its flight time).
         setTimeout(() => {
             totalScore += points;
             spawnScorePop(points, true);
             saveProgress();
-        }, 1750);
+        }, BONUS_START_DELAY_MS);
     }
     function spawnScorePop(points, isBonus) {
         const tracker = document.getElementById('score-tracker');
@@ -1699,9 +1705,9 @@
             pop.style.opacity = '0';
         });
         // Update the badge only once the pop has visually "arrived" —
-        // matches the 1600ms top/left/font-size/opacity transition above.
-        setTimeout(() => renderScoreTracker(), 1600);
-        setTimeout(() => pop.remove(), 1650);
+        // matches the top/left/font-size/opacity transition above.
+        setTimeout(() => renderScoreTracker(), POP_FLIGHT_MS);
+        setTimeout(() => pop.remove(), POP_FLIGHT_MS + 50);
     }
     function totalHintsUsed() {
         return p1EventLog.filter(e => e.type === 'hint').length + p2EventLog.filter(e => e.type === 'hint').length;
@@ -1912,7 +1918,11 @@
                 document.getElementById('hintbtn').style.display = 'none';
                 addBonusScore(10);
                 saveProgress(); // re-save now that wordSearchDone/s2Initialised/jumpedEarly are set
-                setTimeout(goStage2, 900);
+                // Wait for the bonus pop to fully arrive before jumping to
+                // Part 2 (bonus starts at BONUS_START_DELAY_MS, then takes
+                // POP_FLIGHT_MS to land), plus a short pause so it doesn't
+                // feel like the screen yanks away the instant it lands.
+                setTimeout(goStage2, BONUS_START_DELAY_MS + POP_FLIGHT_MS + 400);
                 return;
             }
             if (w === P.pivot) {
