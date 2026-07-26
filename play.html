@@ -1631,6 +1631,7 @@
         p2HintLocked = false; // true once a hint's been used since the last guess — blocks another until you guess again
     let gameStarted = false;
     const MAX_GUESSES = 4;
+    const GUESS_SCORE = { 1: 25, 2: 20, 3: 15, 4: 10 }; // points for guessing the target on guess 1/2/3/4
     // Score-pop animation timing — must match the .score-pop transition
     // duration in the CSS. Kept as constants so the flight time, the badge
     // update delay, the bonus pop's stagger, and the part-2 transition delay
@@ -2057,6 +2058,27 @@
         guessSlots = guessSlots.filter(id => pool.find(s => s.id === id));
     }
 
+    function computeUntouchedLetterBonus() {
+        // Counts how many letters in the final part-2 pool were never used
+        // in any submitted guess (the winning guess counts too, since it's
+        // one of pastGuesses by the time this runs).
+        // Tallied by letter character rather than pool tile id, since the
+        // pool is rebuilt (fresh ids) each time a Part 1 word is found while
+        // jumpedEarly is active — tile ids aren't stable across the whole
+        // game, but letter-character counts are a good, simple proxy.
+        const usedCount = {};
+        pastGuesses.forEach(g => {
+            g.letters.forEach(l => { usedCount[l] = (usedCount[l] || 0) + 1; });
+        });
+        const poolCount = {};
+        pool.forEach(s => { poolCount[s.l] = (poolCount[s.l] || 0) + 1; });
+        let untouched = 0;
+        Object.entries(poolCount).forEach(([l, cnt]) => {
+            untouched += Math.max(0, cnt - (usedCount[l] || 0));
+        });
+        return untouched;
+    }
+
     function goStage2() {
         stage = 2;
         document.getElementById('hintbtn').style.display = 'none';
@@ -2070,6 +2092,8 @@
             let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
             if (jumpedEarly && !wordSearchDone)
                 txt += "<br>Reduce the letter pool by finding more words above.";
+            txt += "<br><br>Score 25 points if you find the Target in 1 guess, 20 pts in 2 guesses, etc.";
+            txt += "<br><br>Choose carefully — score a 1 point bonus for each letter that remains untouched in the letter pool below.";
             instrEl.innerHTML = txt;
         }
         refreshPool();
@@ -2285,8 +2309,19 @@
         renderPastGuesses();
         saveProgress();
         if (guess === P.target) {
+            const guessNumber = pastGuesses.length;
+            const guessPoints = GUESS_SCORE[guessNumber] || 0;
+            const untouchedBonus = computeUntouchedLetterBonus();
+            totalScore += guessPoints + untouchedBonus;
+            saveProgress(); // safety net: persist win points immediately, before the pop animations finish
+            spawnScorePop(guessPoints);
+            let winDelay = POP_FLIGHT_MS + 400;
+            if (untouchedBonus > 0) {
+                setTimeout(() => spawnScorePop(untouchedBonus, true), BONUS_START_DELAY_MS);
+                winDelay = BONUS_START_DELAY_MS + POP_FLIGHT_MS + 400;
+            }
             gameOver = true;
-            showWin();
+            setTimeout(showWin, winDelay);
             return;
         }
         if (pastGuesses.length >= MAX_GUESSES) {
@@ -2467,6 +2502,8 @@
                 let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
                 if (jumpedEarly && !wordSearchDone)
                     txt += "<br>Reduce the letter pool by finding more words above.";
+                txt += "<br><br>Score 25 points if you find the Target in 1 guess, 20 pts in 2 guesses, etc.";
+                txt += "<br><br>Choose carefully — score a 1 point bonus for each letter that remains untouched in the letter pool below.";
                 instrEl.innerHTML = txt;
             }
             renderPool();
