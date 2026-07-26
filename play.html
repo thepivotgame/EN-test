@@ -321,6 +321,31 @@
                     font-size 1600ms ease-in,
                     opacity 1600ms ease-in;
     }
+
+    .score-pop.bonus {
+        font-size: 72px;
+        text-align: center;
+        line-height: 1.05;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.75), 0 0 34px rgba(249, 217, 118, 0.85);
+        animation: bonusPulse 450ms ease-in-out 2;
+    }
+
+    .score-pop .bonus-line1 {
+        display: block;
+        font-size: 0.4em;
+        letter-spacing: 5px;
+        margin-bottom: 2px;
+    }
+
+    .score-pop .bonus-line2 {
+        display: block;
+    }
+
+    @keyframes bonusPulse {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.15); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
     /* Grid */
 
     #grid {
@@ -1628,11 +1653,25 @@
         spawnScorePop(points);
         saveProgress(); // persist immediately so a mid-game refresh never loses earned points
     }
-    function spawnScorePop(points) {
+    function addBonusScore(points) {
+        // Delayed so it doesn't visually collide with the regular "+5" pop
+        // that likely just fired for the 7th word a moment earlier — starts
+        // once that pop has already landed (matches its 1600ms flight time).
+        setTimeout(() => {
+            totalScore += points;
+            spawnScorePop(points, true);
+            saveProgress();
+        }, 1750);
+    }
+    function spawnScorePop(points, isBonus) {
         const tracker = document.getElementById('score-tracker');
         const pop = document.createElement('div');
-        pop.className = 'score-pop';
-        pop.textContent = (points >= 0 ? '+' : '') + points;
+        pop.className = 'score-pop' + (isBonus ? ' bonus' : '');
+        if (isBonus) {
+            pop.innerHTML = '<span class="bonus-line1">BONUS</span><span class="bonus-line2">+' + points + '</span>';
+        } else {
+            pop.textContent = (points >= 0 ? '+' : '') + points;
+        }
 
         // Start big, dead center of the screen.
         const startTop = window.innerHeight / 2;
@@ -1871,6 +1910,7 @@
                 hintKeys = new Set();
                 renderGrid();
                 document.getElementById('hintbtn').style.display = 'none';
+                addBonusScore(10);
                 saveProgress(); // re-save now that wordSearchDone/s2Initialised/jumpedEarly are set
                 setTimeout(goStage2, 900);
                 return;
