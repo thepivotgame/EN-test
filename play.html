@@ -1615,6 +1615,9 @@
         pivotCellKeys = new Set();
     let foundOrder = []; // tracks Part 1 words in the order they were found
     let totalScore = 0; // running score total, persists for the whole game (see addScore())
+    let displayScore = 0; // what the badge actually shows — only increments when a pop visually lands,
+                           // so a bonus that's already added to totalScore for persistence never shows
+                           // in the badge before its own popup arrives (see spawnScorePop)
     let pendingLockBonus = 0; // computed when the pivot modal opens: 5 pts × words still unfound
     let lastGameWon = null; // tracks whether the most recent game finish was a win, for reopening the summary popup
     let p1EventLog = [], // chronological log of Part 1 word-found / hint-used events, for score report line breaks
@@ -1672,7 +1675,7 @@
     }
     function renderScoreTracker() {
         const el = document.getElementById('score-value');
-        if (el) el.textContent = totalScore;
+        if (el) el.textContent = displayScore;
     }
     function addScore(points, label) {
         totalScore += points;
@@ -1725,9 +1728,15 @@
             pop.style.fontSize = '14px';
             pop.style.opacity = '0';
         });
-        // Update the badge only once the pop has visually "arrived" —
-        // matches the top/left/font-size/opacity transition above.
-        setTimeout(() => renderScoreTracker(), POP_FLIGHT_MS);
+        // Update the badge only once THIS pop has visually "arrived" — bumps
+        // the badge by exactly this pop's own point value, regardless of
+        // whether totalScore (used for persistence) was already incremented
+        // earlier for a different, still-in-flight pop (e.g. a guess-score
+        // pop and a bonus pop both fired from the same win).
+        setTimeout(() => {
+            displayScore += points;
+            renderScoreTracker();
+        }, POP_FLIGHT_MS);
         setTimeout(() => pop.remove(), POP_FLIGHT_MS + 50);
     }
     function totalHintsUsed() {
@@ -2440,6 +2449,7 @@
         p2HintLocked = saved.p2HintLocked || false;
         advancedMode = saved.advancedMode || false;
         totalScore = saved.totalScore || 0;
+        displayScore = totalScore; // no pop animating on a page reload — show the true value immediately
 
         // Restore pool
         pool.length = 0;
@@ -3164,6 +3174,7 @@
             foundOrder = saved.foundOrder || [];
             selCells = [];
             totalScore = saved.totalScore || 0;
+            displayScore = totalScore; // no pop animating here either — show the true value immediately
             showScoreTracker();
             renderScoreTracker();
 
