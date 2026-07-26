@@ -1597,6 +1597,7 @@
         pivotCellKeys = new Set();
     let foundOrder = []; // tracks Part 1 words in the order they were found
     let totalScore = 0; // running score total, persists for the whole game (see addScore())
+    let pendingLockBonus = 0; // computed when the pivot modal opens: 5 pts × words still unfound
     let lastGameWon = null; // tracks whether the most recent game finish was a win, for reopening the summary popup
     let p1EventLog = [], // chronological log of Part 1 word-found / hint-used events, for score report line breaks
         p2EventLog = []; // chronological log of Part 2 guess-submitted / hint-used events, same purpose
@@ -1659,15 +1660,16 @@
         spawnScorePop(points);
         saveProgress(); // persist immediately so a mid-game refresh never loses earned points
     }
+    function awardBonus(points) {
+        totalScore += points;
+        spawnScorePop(points, true);
+        saveProgress();
+    }
     function addBonusScore(points) {
         // Delayed so it doesn't visually collide with the regular "+5" pop
         // that likely just fired for the 7th word a moment earlier — starts
         // once that pop has already landed (matches its flight time).
-        setTimeout(() => {
-            totalScore += points;
-            spawnScorePop(points, true);
-            saveProgress();
-        }, BONUS_START_DELAY_MS);
+        setTimeout(() => awardBonus(points), BONUS_START_DELAY_MS);
     }
     function spawnScorePop(points, isBonus) {
         const tracker = document.getElementById('score-tracker');
@@ -1979,7 +1981,13 @@
     function showPivotModal() {
         // Player always gets the classic/advanced choice, no matter how many
         // search words remain unfound.
-        document.getElementById('modal-choice-body').style.display = '';
+        const unfoundCount = P.words.length - foundWords.size;
+        pendingLockBonus = unfoundCount * 5;
+        const bodyEl = document.getElementById('modal-choice-body');
+        bodyEl.innerHTML = 'Lock the word search now for a bonus of <strong>+' + pendingLockBonus +
+            '</strong> (5 pts × ' + unfoundCount + ' unfound word' + (unfoundCount === 1 ? '' : 's') +
+            '), or keep searching for the rest?';
+        bodyEl.style.display = '';
         document.getElementById('modal-stay').style.display = '';
         document.getElementById('modal-lock-body').style.display = 'none';
         document.getElementById('modal-overlay').style.display = 'flex';
@@ -2613,8 +2621,14 @@
         document.getElementById('hintbtn').style.display = 'none';
         jumpedEarly = true;
         s2Initialised = true;
-        saveProgress();
-        goStage2();
+        if (pendingLockBonus > 0) {
+            awardBonus(pendingLockBonus);
+            pendingLockBonus = 0;
+            setTimeout(goStage2, POP_FLIGHT_MS + 400);
+        } else {
+            saveProgress();
+            goStage2();
+        }
     }
     document.getElementById('modal-jump').addEventListener('touchend', function(e) {
         e.preventDefault();
