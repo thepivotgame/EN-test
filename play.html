@@ -1363,7 +1363,7 @@
             starsRow += '★';
         }
 
-        let html = '<div class="stats-title">🔥 Monthly Progress Report 📈</div>' +
+        let html = '<div class="stats-title">Today\'s score: ' + totalScore + ' points</div>' +
             '<div class="stats-streak-block">' +
                 '<div class="stats-streak-num">' + s.currentStreak + '-day streak</div>' +
                 '<div class="stats-streak-sub">' + s.played + '/' + s.elapsedDays + ' days played this month</div>' +
@@ -1946,7 +1946,7 @@
                 hintKeys = new Set();
                 renderGrid();
                 document.getElementById('hintbtn').style.display = 'none';
-                addBonusScore(25);
+                addBonusScore(20);
                 saveProgress(); // re-save now that wordSearchDone/s2Initialised/jumpedEarly are set
                 // Wait for the bonus pop to fully arrive before jumping to
                 // Part 2 (bonus starts at BONUS_START_DELAY_MS, then takes
@@ -2962,18 +2962,11 @@
 
 
         const hints = totalHintsUsed();
-        const p2Guesses = p2EventLog.filter(e => e.type === 'guess').length;
         let performanceLine = '';
         if (lastGameWon === false) {
             performanceLine = "Didn't quite get it today. \n😔";
-        } else if (hints === 0) {
-            performanceLine = 'No hints used. \n🎉 🥳 😎';
-        } else if (hints === 1) {
-            performanceLine = 'Only 1 hint used. \n🥳 🤓';
-        } else if (hints === 2) {
-            performanceLine = 'Just 2 hints used. \n😊';
-        } else if (hints >= 3 && p2Guesses >= 4) {
-            performanceLine = 'Phew! I made it!! \n😅';
+        } else {
+            performanceLine = totalScore + ' points / ' + hints + (hints === 1 ? ' hint' : ' hints') + ' used';
         }
         const perfSuffix = performanceLine ? '\n' + performanceLine : '';
         return 'PIVOT — ' + P.theme + perfSuffix + '\n' + p1Emoji + '\n' + guessEmoji  + '\nPlay at PivotWord(dot)com' + statsMonthEndShareLine(todayISO());
