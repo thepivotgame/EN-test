@@ -275,47 +275,52 @@
         top: 14px;
         right: 14px;
         z-index: 950;
-        background: rgba(33, 47, 61, 0.92);
+        background: #e8734a;
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        border: 1px solid #c85a2e;
         border-radius: 10px;
-        padding: 7px 14px;
+        padding: 7px 16px;
         font-family: Georgia, serif;
-        font-size: 15px;
-        font-weight: bold;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        box-shadow: 0 0 8px rgba(232, 115, 74, 0.6), 0 4px 14px rgba(0,0,0,0.4);
         display: none;
+        flex-direction: column;
+        align-items: center;
         pointer-events: none;
     }
 
     #score-tracker .score-label {
         font-size: 9px;
         letter-spacing: 2px;
-        color: #a8c8e8;
+        color: #fff;
+        opacity: 0.85;
         text-transform: uppercase;
-        display: block;
+        text-align: center;
         font-weight: normal;
         margin-bottom: 1px;
     }
 
+    #score-tracker #score-value {
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+    }
+
     .score-pop {
         position: fixed;
-        top: 44px;
-        right: 18px;
-        z-index: 949;
-        color: #2ecc71;
+        z-index: 960;
+        color: #fff700;
         font-family: Georgia, serif;
-        font-size: 17px;
+        font-size: 20px;
         font-weight: bold;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.6);
         pointer-events: none;
-        animation: scorePopFloat 1100ms ease-out forwards;
+        animation: scorePopFloat 1300ms ease-out forwards;
     }
 
     @keyframes scorePopFloat {
-        0% { opacity: 0; transform: translateY(0); }
-        15% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(-32px); }
+        0% { opacity: 0; transform: translateY(0) scale(0.9); }
+        15% { opacity: 1; transform: translateY(0) scale(1.05); }
+        100% { opacity: 0; transform: translateY(-42px) scale(1); }
     }
     /* Grid */
 
@@ -1613,7 +1618,7 @@
     }
     function showScoreTracker() {
         const el = document.getElementById('score-tracker');
-        if (el) el.style.display = 'block';
+        if (el) el.style.display = 'flex';
     }
     function renderScoreTracker() {
         const el = document.getElementById('score-value');
@@ -1626,11 +1631,20 @@
         saveProgress(); // persist immediately so a mid-game refresh never loses earned points
     }
     function spawnScorePop(points) {
+        const tracker = document.getElementById('score-tracker');
         const pop = document.createElement('div');
         pop.className = 'score-pop';
         pop.textContent = (points >= 0 ? '+' : '') + points;
+        if (tracker) {
+            const rect = tracker.getBoundingClientRect();
+            pop.style.top = (rect.bottom + 8) + 'px';
+            pop.style.right = (window.innerWidth - rect.right) + 'px';
+        } else {
+            pop.style.top = '60px';
+            pop.style.right = '18px';
+        }
         document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 1150);
+        setTimeout(() => pop.remove(), 1350);
     }
     function totalHintsUsed() {
         return p1EventLog.filter(e => e.type === 'hint').length + p2EventLog.filter(e => e.type === 'hint').length;
