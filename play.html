@@ -310,16 +310,16 @@
         z-index: 960;
         color: #fff700;
         font-family: Georgia, serif;
-        font-size: 40px;
+        font-size: 56px;
         font-weight: bold;
         text-shadow: 0 2px 10px rgba(0,0,0,0.7), 0 0 22px rgba(255,247,0,0.55);
         pointer-events: none;
         transform: translate(-50%, -50%);
         opacity: 1;
-        transition: top 850ms cubic-bezier(.25,.65,.3,1),
-                    left 850ms cubic-bezier(.25,.65,.3,1),
-                    font-size 850ms ease-in,
-                    opacity 850ms ease-in;
+        transition: top 1600ms cubic-bezier(.25,.65,.3,1),
+                    left 1600ms cubic-bezier(.25,.65,.3,1),
+                    font-size 1600ms ease-in,
+                    opacity 1600ms ease-in;
     }
     /* Grid */
 
@@ -1625,7 +1625,6 @@
     }
     function addScore(points, label) {
         totalScore += points;
-        renderScoreTracker();
         spawnScorePop(points);
         saveProgress(); // persist immediately so a mid-game refresh never loses earned points
     }
@@ -1660,7 +1659,10 @@
             pop.style.fontSize = '14px';
             pop.style.opacity = '0';
         });
-        setTimeout(() => pop.remove(), 900);
+        // Update the badge only once the pop has visually "arrived" —
+        // matches the 1600ms top/left/font-size/opacity transition above.
+        setTimeout(() => renderScoreTracker(), 1600);
+        setTimeout(() => pop.remove(), 1650);
     }
     function totalHintsUsed() {
         return p1EventLog.filter(e => e.type === 'hint').length + p2EventLog.filter(e => e.type === 'hint').length;
