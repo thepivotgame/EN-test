@@ -758,46 +758,6 @@
         display: none;
     }
 
-    #score-intro-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.65);
-        z-index: 1000;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        touch-action: pan-y;
-    }
-
-    #score-intro-box {
-        background: linear-gradient(160deg, #0d3349, #1a5276);
-        border: 1px solid rgba(249, 217, 118, 0.4);
-        border-radius: 16px;
-        padding: 22px 20px;
-        max-width: 320px;
-        width: 100%;
-        text-align: center;
-    }
-
-    #score-intro-box h3 {
-        color: #f9d976;
-        font-size: 18px;
-        letter-spacing: 1px;
-        margin-bottom: 14px;
-    }
-
-    #score-intro-box p {
-        color: #a8c8e8;
-        font-size: 13.5px;
-        line-height: 1.5;
-        margin-bottom: 14px;
-    }
-
-    #score-intro-box p:last-of-type {
-        margin-bottom: 20px;
-    }
-
     #modal-box {
         background: linear-gradient(160deg, #0d3349, #1a5276);
         border: 1px solid rgba(249, 217, 118, 0.4);
@@ -1241,16 +1201,6 @@
             </p>
 
             <button class="modal-btn primary" onclick="closeScoreInfo()">Got it</button>
-        </div>
-    </div>
-
-    <div id="score-intro-overlay">
-        <div id="score-intro-box">
-            <h3>New: Score System! 🎉</h3>
-            <p>We've added points for finding words, locking in bonuses, and solving fast.</p>
-            <p>Try it out and let us know via the sharing/feedback button what you think.</p>
-            <p>Enjoy!</p>
-            <button class="modal-btn primary" id="score-intro-close">Got it</button>
         </div>
     </div>
 
@@ -1784,11 +1734,9 @@
         const el = document.getElementById('score-tracker');
         if (el) el.style.display = 'flex';
     }
-    const MAX_SCORE = 100; // total score is capped here — see addPoints()
     function addPoints(points) {
-        // Single place that mutates totalScore, so the 100-point cap can
-        // never be bypassed by a future scoring feature that adds directly.
-        totalScore = Math.min(MAX_SCORE, totalScore + points);
+        // Single place that mutates totalScore — no cap on total score.
+        totalScore = totalScore + points;
     }
     function renderScoreTracker() {
         const el = document.getElementById('score-value');
@@ -1851,7 +1799,7 @@
         // earlier for a different, still-in-flight pop (e.g. a guess-score
         // pop and a bonus pop both fired from the same win).
         setTimeout(() => {
-            displayScore = Math.min(MAX_SCORE, displayScore + points);
+            displayScore = displayScore + points;
             renderScoreTracker();
         }, POP_FLIGHT_MS);
         setTimeout(() => pop.remove(), POP_FLIGHT_MS + 50);
@@ -3398,30 +3346,7 @@
                 initGame();
             }
         }
-        maybeShowScoreIntro();
     }
-
-    // ── SCORE SYSTEM INTRO POPUP (shown once per device) ────────────────────────
-    function maybeShowScoreIntro() {
-        let seen = false;
-        try {
-            seen = localStorage.getItem('pivot_seen_score_intro') === '1';
-        } catch (e) { /* storage unavailable — just skip showing it */ return; }
-        if (seen) return;
-        const overlay = document.getElementById('score-intro-overlay');
-        if (overlay) overlay.style.display = 'flex';
-    }
-    function dismissScoreIntro() {
-        const overlay = document.getElementById('score-intro-overlay');
-        if (overlay) overlay.style.display = 'none';
-        try { localStorage.setItem('pivot_seen_score_intro', '1'); } catch (e) { /* storage unavailable */ }
-    }
-    (function() {
-        const btn = document.getElementById('score-intro-close');
-        if (!btn) return;
-        btn.addEventListener('touchend', function(e) { e.preventDefault(); dismissScoreIntro(); }, { passive: false });
-        btn.addEventListener('click', function(e) { e.preventDefault(); dismissScoreIntro(); });
-    })();
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', loadAndStart);
