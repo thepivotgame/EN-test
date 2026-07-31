@@ -7,6 +7,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>PIVOT</title>
+    
+    <script>
+      window.goatcounter = {
+        path: function() {
+          var isEN = location.hostname.includes('pivotword');
+          return (isEN ? '/en' : '/bible') + location.pathname;
+        }
+      };
+    </script>
+    
+    
     <script data-goatcounter="https://pivot.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <style>
     * {
@@ -1176,6 +1187,17 @@
         </div>
     </div>
 
+    <!-- August reset notice — one-time pop-up for returning players only -->
+    <div id="aug-reset-notice" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1100;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:linear-gradient(160deg, #0d3349, #1a5276);border:1px solid rgba(249, 217, 118, 0.4);border-radius:16px;padding:22px 20px;max-width:360px;width:100%;font-family:Georgia, serif;text-align:center;box-sizing:border-box;">
+            <p style="font-size:15px;line-height:1.6;color:#e8e4d9;margin-bottom:1.25rem;">
+                <span style="font-size:17px;font-weight:bold;color:#f9d976;">New month, fresh start!</span><br>
+                Your streak and score have reset for August. Keep playing daily — we'll share a monthly recap at the end of the month.
+            </p>
+            <button class="modal-btn primary" onclick="dismissAugResetNotice()">Got it</button>
+        </div>
+    </div>
+
     <!-- ── Score info popup — shown on demand via showScoreInfo(), not automatically ── -->
     <div id="score-info-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:20px;">
         <div id="score-info-box" style="background:linear-gradient(160deg, #0d3349, #1a5276);border:1px solid rgba(249, 217, 118, 0.4);border-radius:16px;padding:22px 20px;max-width:360px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;font-family:Georgia, serif;position:relative;box-sizing:border-box;">
@@ -2216,11 +2238,11 @@
             let txt = "It is related to <strong>" + P.pivot + "</strong>. You have " + MAX_GUESSES + " guesses.";
             if (jumpedEarly && !wordSearchDone)
                 txt += "<br>Reduce the letter pool by finding more words above.";
-            txt += "<br><br>+25 if you solve in 1 guess.";
-            txt += "<br>+20 if you solve in 2 guesses.";
-            txt += "<br>+15 if you solve in 3 guesses.";
-            txt += "<br>+10 if you solve in 4 guesses.";
-            txt += "<br><br>BONUS: +2 for each untouched letter.";
+            txt += "<br>&nbsp; &nbsp;&nbsp; &nbsp;+25 pts if you solve in 1 guess.";
+            txt += "<br>&nbsp; &nbsp;&nbsp; &nbsp;+20 pts if you solve in 2 guesses.";
+            txt += "<br>&nbsp; &nbsp;&nbsp; &nbsp;+15 pts if you solve in 3 guesses.";
+            txt += "<br>&nbsp; &nbsp;&nbsp; &nbsp;+10 pts if you solve in 4 guesses.";
+            txt += "<br>BONUS: +2 pts for each untouched letter.";
             instrEl.innerHTML = txt;
         }
         refreshPool();
@@ -3060,7 +3082,7 @@
             performanceLine = totalScore + ' points / ' + hintsText;
         }
         const perfSuffix = performanceLine ? '\n' + performanceLine : '';
-        return 'PIVOT — ' + P.theme + perfSuffix + '\n' + p1Emoji + '\n' + guessEmoji  + '\nPlay at PivotWord(dot)com' + statsMonthEndShareLine(todayISO());
+        return 'PIVOT — ' + P.theme + '\n' + p1Emoji + '\n' + guessEmoji + perfSuffix + '\nPivotWord(dot)com'; // + statsMonthEndShareLine(todayISO()); // TEMP: monthly share data disabled until copy is finalized (re-enable end of next month)
         
     }
     function showSharePrompt() {
@@ -3316,7 +3338,45 @@
         if (saved.won) showWin(); else showLoss();
     }
 
+    // ── AUGUST RESET NOTICE (one-time, returning players only) ─────────────────
+    // "Returning player" = someone with any pivot_stats_ key dated before
+    // August 2026 (i.e. they played in July or earlier). Brand-new players have
+    // no such key and never see this. Shown at most once per device via the
+    // 'pivot_aug2026_reset_notice_seen' flag.
+    function hasPreAugustStats() {
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key || key.indexOf('pivot_stats_') !== 0) continue;
+                const parts = key.replace('pivot_stats_', '').split('_');
+                if (parts.length !== 2) continue;
+                const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
+                if (!isNaN(y) && !isNaN(m) && (y < 2026 || (y === 2026 && m < 8))) return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+    function shouldShowAugResetNotice() {
+        try {
+            if (localStorage.getItem('pivot_aug2026_reset_notice_seen') === 'true') return false;
+        } catch (e) { return false; }
+        return hasPreAugustStats();
+    }
+    function dismissAugResetNotice() {
+        try { localStorage.setItem('pivot_aug2026_reset_notice_seen', 'true'); } catch (e) {}
+        document.getElementById('aug-reset-notice').style.display = 'none';
+        _loadAndStart();
+    }
+
     async function loadAndStart() {
+        if (shouldShowAugResetNotice()) {
+            document.getElementById('aug-reset-notice').style.display = 'flex';
+            return;
+        }
+        _loadAndStart();
+    }
+
+    async function _loadAndStart() {
         const loadEl = document.getElementById('loading-msg');
         try {
             P = await fetchTodayPuzzle();
